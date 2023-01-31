@@ -20,7 +20,7 @@ use crate::gadget_poseidon::{PoseidonParams, Poseidon_hash_2, Poseidon_hash_2_co
 
 type DBVal = (Scalar, Scalar);
 
-pub const TreeDepth: usize = 253;
+pub const TreeDepth: usize = 32;
 
 // TODO: ABSTRACT HASH FUNCTION BETTER
 
@@ -267,8 +267,8 @@ mod tests {
         let mut tree = VanillaSparseMerkleTree::new(&constants);*/
 
         let width = 6;
-        let (full_b, full_e) = (4, 4);
-        let partial_rounds = 140;
+        let (full_b, full_e) = (8, 8);
+        let partial_rounds = 105;
         let total_rounds = full_b + partial_rounds + full_e;
         let p_params = PoseidonParams::new(width, full_b, full_e, partial_rounds);
         let mut tree = VanillaSparseMerkleTree::new(&p_params);
@@ -287,7 +287,8 @@ mod tests {
         assert!(tree.verify_proof(k, k, &merkle_proof_vec, Some(&tree.root)));
 
         let pc_gens = PedersenGens::default();
-        let bp_gens = BulletproofGens::new(819200, 1);
+        let gens_capacity = 1 << 15; // 2^15 is minimal
+        let bp_gens = BulletproofGens::new(gens_capacity, 1);
 
         let (proof, commitments) = {
             let mut prover_transcript = Transcript::new(b"VSMT");

@@ -22,7 +22,7 @@ type ProofNode = [Scalar; 3];
 
 /// Depth of the tree. Has to be a multiple of 4.
 // TODO: Remove this restriction.
-pub const TreeDepth: usize = 128;
+pub const TreeDepth: usize = 16; // 4ˆ16=2ˆ32
 
 /// Number of bytes to represent leaf index
 pub const LeafIndexBytes: usize = TreeDepth / 4;
@@ -363,9 +363,11 @@ mod tests {
     fn test_VSMT_4_Verif() {
         let mut test_rng: StdRng = SeedableRng::from_seed([24u8; 32]);
 
+        // can use t=6, rf=8 and rp=105 for 128 bits security with S-box(x) = x^-1:
         let width = 6;
-        let (full_b, full_e) = (4, 4);
-        let partial_rounds = 140;
+        let (full_b, full_e) = (8, 8); 
+        let partial_rounds = 105; 
+
         let total_rounds = full_b + partial_rounds + full_e;
         let p_params = PoseidonParams::new(width, full_b, full_e, partial_rounds);
         let mut tree = VanillaSparseMerkleTree_4::new(&p_params);
@@ -384,7 +386,8 @@ mod tests {
         assert!(tree.verify_proof(k, k, &merkle_proof_vec, Some(&tree.root)));
 
         let pc_gens = PedersenGens::default();
-        let bp_gens = BulletproofGens::new(819200, 1);
+        let gens_capacity = 1 << 14; // 2^14 is minimal
+        let bp_gens = BulletproofGens::new(gens_capacity, 1);
 
         let (proof, commitments) = {
             let mut prover_transcript = Transcript::new(b"VSMT");
